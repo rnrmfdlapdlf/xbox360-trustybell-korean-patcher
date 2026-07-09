@@ -2,6 +2,14 @@
 
 Xbox 360 일본판 `트러스티 벨` ISO용 한글 패처입니다.
 
+## 샘플
+
+![Sample 1](samples/sample1.jpg)
+
+![Sample 2](samples/sample2.jpg)
+
+![Sample 3](samples/sample3.jpg)
+
 ## 현재 범위
 
 - `ImasKoreanPatcher` 구조를 참고한 WinForms UI
