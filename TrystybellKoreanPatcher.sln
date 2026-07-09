@@ -1,0 +1,20 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrystybellKoreanPatcher", "TrystybellKoreanPatcher.csproj", "{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}.Debug|Any CPU.ActiveCfg = Debug|AnyCPU
+		{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}.Debug|Any CPU.Build.0 = Debug|AnyCPU
+		{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}.Release|Any CPU.ActiveCfg = Release|AnyCPU
+		{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}.Release|Any CPU.Build.0 = Release|AnyCPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
+
