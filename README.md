@@ -1,6 +1,6 @@
-# TrystybellKoreanPatcher
+# 트러스티 벨 한글 패치 (AI 번역)
 
-Xbox 360 일본판 `트러스티 벨` ISO용 한글 패처입니다.
+Xbox 360 일본판 `트러스티 벨` ISO용 한글 패치 프로그램입니다.
 
 ## 샘플
 
@@ -37,3 +37,5 @@ Visual Studio 또는 MSBuild로 빌드합니다.
 ```powershell
 %WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe TrystybellKoreanPatcher.sln /p:Configuration=Release
 ```
+
+Build with GPT-5.5 · Translated with Gemma 4
