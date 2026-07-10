@@ -13,11 +13,7 @@ namespace TrystybellKoreanPatcher
         private readonly Dictionary<PatchStage, Label> stageStatusLabels;
 
         private Panel dropPanel;
-        private Label dropTitleLabel;
         private Label dropHintLabel;
-        private TextBox outputTextBox;
-        private Button outputButton;
-        private CheckBox keepWorkspaceCheckBox;
         private Button patchButton;
         private ProgressBar progressBar;
         private TextBox logTextBox;
@@ -52,9 +48,9 @@ namespace TrystybellKoreanPatcher
             root.Dock = DockStyle.Fill;
             root.Padding = new Padding(18);
             root.BackColor = BackColor;
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 34F));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 28F));
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42F));
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 118F));
@@ -122,15 +118,14 @@ namespace TrystybellKoreanPatcher
             center.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
             inner.Controls.Add(center, 0, 1);
 
-            dropTitleLabel = new Label();
-            dropTitleLabel.Dock = DockStyle.Fill;
-            dropTitleLabel.TextAlign = ContentAlignment.MiddleCenter;
-            dropTitleLabel.Font = new Font(Font.FontFamily, 13F, FontStyle.Bold, GraphicsUnit.Point);
-            dropTitleLabel.ForeColor = Color.FromArgb(34, 42, 54);
-            dropTitleLabel.AutoSize = false;
-            dropTitleLabel.UseMnemonic = false;
-            dropTitleLabel.Text = "일본판 Trusty Bell ISO를\r\n여기에 드래그 & 드롭";
-            center.Controls.Add(dropTitleLabel, 0, 0);
+            Label titleLabel = new Label();
+            titleLabel.Dock = DockStyle.Fill;
+            titleLabel.TextAlign = ContentAlignment.MiddleCenter;
+            titleLabel.Font = new Font(Font.FontFamily, 13F, FontStyle.Bold, GraphicsUnit.Point);
+            titleLabel.ForeColor = Color.FromArgb(34, 42, 54);
+            titleLabel.UseMnemonic = false;
+            titleLabel.Text = "일본판 Trusty Bell ISO를\r\n여기에 드래그 & 드롭";
+            center.Controls.Add(titleLabel, 0, 0);
 
             dropHintLabel = new Label();
             dropHintLabel.Dock = DockStyle.Fill;
@@ -144,7 +139,7 @@ namespace TrystybellKoreanPatcher
             panel.Click += OnDropPanelClick;
             inner.Click += OnDropPanelClick;
             center.Click += OnDropPanelClick;
-            dropTitleLabel.Click += OnDropPanelClick;
+            titleLabel.Click += OnDropPanelClick;
             dropHintLabel.Click += OnDropPanelClick;
             panel.DragEnter += OnDragEnter;
             panel.DragDrop += OnDragDrop;
@@ -168,9 +163,9 @@ namespace TrystybellKoreanPatcher
             layout.RowCount = PatchStageCatalog.GetStages().Length + 2;
             layout.Dock = DockStyle.Fill;
             layout.BackColor = BackColor;
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 64F));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 36F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
             panel.Controls.Add(layout);
 
             Label title = new Label();
@@ -178,7 +173,7 @@ namespace TrystybellKoreanPatcher
             title.TextAlign = ContentAlignment.MiddleLeft;
             title.Font = new Font(Font.FontFamily, 10F, FontStyle.Bold, GraphicsUnit.Point);
             title.ForeColor = Color.FromArgb(34, 42, 54);
-            title.Text = "패치 흐름";
+            title.Text = "진행 상태";
             layout.Controls.Add(title, 0, 0);
             layout.SetColumnSpan(title, 2);
 
@@ -187,7 +182,7 @@ namespace TrystybellKoreanPatcher
             {
                 PatchStage stage = stages[i];
                 int row = i + 1;
-                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
 
                 Label nameLabel = new Label();
                 nameLabel.Dock = DockStyle.Fill;
@@ -213,75 +208,21 @@ namespace TrystybellKoreanPatcher
             Panel panel = new Panel();
             panel.BackColor = BackColor;
             panel.Dock = DockStyle.Fill;
-            panel.Margin = new Padding(8, 0, 0, 0);
-
-            TableLayoutPanel layout = new TableLayoutPanel();
-            layout.ColumnCount = 1;
-            layout.RowCount = 9;
-            layout.Dock = DockStyle.Fill;
-            layout.BackColor = BackColor;
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 12F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 34F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 62F));
-            panel.Controls.Add(layout);
-
-            Label title = new Label();
-            title.Dock = DockStyle.Fill;
-            title.TextAlign = ContentAlignment.MiddleLeft;
-            title.Font = new Font(Font.FontFamily, 10F, FontStyle.Bold, GraphicsUnit.Point);
-            title.ForeColor = Color.FromArgb(34, 42, 54);
-            title.Text = "출력";
-            layout.Controls.Add(title, 0, 0);
-
-            Label outputLabel = new Label();
-            outputLabel.Dock = DockStyle.Fill;
-            outputLabel.TextAlign = ContentAlignment.BottomLeft;
-            outputLabel.ForeColor = Color.FromArgb(65, 72, 86);
-            outputLabel.Text = "출력 ISO";
-            layout.Controls.Add(outputLabel, 0, 1);
-
-            outputTextBox = new TextBox();
-            outputTextBox.Dock = DockStyle.Fill;
-            outputTextBox.ReadOnly = true;
-            outputTextBox.BackColor = Color.White;
-            layout.Controls.Add(outputTextBox, 0, 2);
-
-            outputButton = new Button();
-            outputButton.Dock = DockStyle.Left;
-            outputButton.Width = 112;
-            outputButton.Text = "위치 변경";
-            outputButton.Enabled = false;
-            outputButton.Click += OnOutputButtonClick;
-            layout.Controls.Add(outputButton, 0, 4);
-
-            keepWorkspaceCheckBox = new CheckBox();
-            keepWorkspaceCheckBox.Dock = DockStyle.Fill;
-            keepWorkspaceCheckBox.Text = "작업 폴더 보존";
-            keepWorkspaceCheckBox.ForeColor = Color.FromArgb(65, 72, 86);
-            keepWorkspaceCheckBox.Checked = true;
-            layout.Controls.Add(keepWorkspaceCheckBox, 0, 5);
-
-            Label note = new Label();
-            note.Dock = DockStyle.Fill;
-            note.TextAlign = ContentAlignment.TopLeft;
-            note.ForeColor = Color.FromArgb(92, 101, 116);
-            note.Text = "현재 빌드는 UI와 순수 C# 패치 단계 골격만 포함합니다.";
-            layout.Controls.Add(note, 0, 6);
+            panel.Margin = new Padding(4, 0, 0, 0);
 
             patchButton = new Button();
             patchButton.Anchor = AnchorStyles.None;
-            patchButton.Size = new Size(168, 54);
+            patchButton.Size = new Size(142, 58);
             patchButton.Text = "패치 시작";
             patchButton.Font = new Font(Font.FontFamily, 12F, FontStyle.Bold, GraphicsUnit.Point);
             patchButton.Enabled = false;
             patchButton.Click += OnPatchButtonClick;
-            layout.Controls.Add(patchButton, 0, 8);
+            panel.Controls.Add(patchButton);
+            panel.Resize += delegate
+            {
+                patchButton.Left = Math.Max(0, (panel.ClientSize.Width - patchButton.Width) / 2);
+                patchButton.Top = Math.Max(0, (panel.ClientSize.Height - patchButton.Height) / 2);
+            };
 
             return panel;
         }
@@ -301,32 +242,6 @@ namespace TrystybellKoreanPatcher
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
                     SelectIso(dialog.FileName);
-                }
-            }
-        }
-
-        private void OnOutputButtonClick(object sender, EventArgs e)
-        {
-            if (String.IsNullOrEmpty(selectedIsoPath) || IsBusy())
-            {
-                return;
-            }
-
-            using (SaveFileDialog dialog = new SaveFileDialog())
-            {
-                dialog.Title = "출력 ISO 위치 선택";
-                dialog.Filter = "ISO files (*.iso)|*.iso|All files (*.*)|*.*";
-                dialog.FileName = Path.GetFileName(outputTextBox.Text);
-                string directory = Path.GetDirectoryName(outputTextBox.Text);
-                if (!String.IsNullOrEmpty(directory) && Directory.Exists(directory))
-                {
-                    dialog.InitialDirectory = directory;
-                }
-
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    outputTextBox.Text = dialog.FileName;
-                    AppendLog("출력 ISO: " + dialog.FileName);
                 }
             }
         }
@@ -357,15 +272,12 @@ namespace TrystybellKoreanPatcher
                 return;
             }
 
-            selectedIsoPath = path;
+            selectedIsoPath = Path.GetFullPath(path);
             patchButton.Enabled = true;
-            outputButton.Enabled = true;
             progressBar.Value = 0;
             ResetStageStatuses();
-
             dropHintLabel.Text = Path.GetFileName(path);
-            outputTextBox.Text = PatchStageCatalog.BuildDefaultOutputIsoPath(path);
-            logTextBox.Text = "ISO 선택됨: " + path;
+            logTextBox.Text = "ISO 선택됨: " + selectedIsoPath;
         }
 
         private void OnPatchButtonClick(object sender, EventArgs e)
@@ -376,16 +288,29 @@ namespace TrystybellKoreanPatcher
                 return;
             }
 
+            string outputPath = PatchStageCatalog.BuildDefaultOutputIsoPath(selectedIsoPath);
+            if (File.Exists(outputPath))
+            {
+                DialogResult overwrite = MessageBox.Show(
+                    this,
+                    Path.GetFileName(outputPath) + " 파일이 이미 있습니다. 덮어쓸까요?",
+                    "기존 패치 ISO 확인",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button2);
+                if (overwrite != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
+
             SetBusy(true);
             ResetStageStatuses();
             progressBar.Value = 0;
-            AppendLog("패치 파이프라인 점검 시작");
+            AppendLog("한글 패치를 시작합니다.");
 
             PatchJobOptions options = new PatchJobOptions();
             options.InputIsoPath = selectedIsoPath;
-            options.OutputIsoPath = outputTextBox.Text;
-            options.WorkRoot = PatchStageCatalog.BuildDefaultWorkRoot(selectedIsoPath);
-            options.KeepWorkspace = keepWorkspaceCheckBox.Checked;
 
             patchWorker = new BackgroundWorker();
             patchWorker.WorkerReportsProgress = true;
@@ -416,20 +341,21 @@ namespace TrystybellKoreanPatcher
                 if (args.Error != null)
                 {
                     AppendLog("오류: " + args.Error.Message);
+                    MessageBox.Show(this, args.Error.Message, "패치 실패", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 PatchResult result = args.Result as PatchResult;
-                if (result != null && result.RequiresImplementation)
-                {
-                    AppendLog("큰 틀 준비 완료: " + result.Message);
-                    return;
-                }
-
                 if (result != null && result.Completed)
                 {
                     progressBar.Value = 100;
                     AppendLog("완료: " + result.OutputIsoPath);
+                    MessageBox.Show(
+                        this,
+                        "한글 패치가 완료되었습니다.\r\n\r\n" + result.OutputIsoPath,
+                        "패치 완료",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                     return;
                 }
 
@@ -466,8 +392,8 @@ namespace TrystybellKoreanPatcher
                     label.ForeColor = Color.FromArgb(28, 132, 86);
                     break;
                 case PatchStageState.Blocked:
-                    label.Text = "구현 대기";
-                    label.ForeColor = Color.FromArgb(190, 96, 28);
+                    label.Text = "오류";
+                    label.ForeColor = Color.FromArgb(190, 60, 52);
                     break;
                 default:
                     label.Text = "대기";
@@ -480,8 +406,6 @@ namespace TrystybellKoreanPatcher
         {
             dropPanel.Enabled = !busy;
             patchButton.Enabled = !busy && !String.IsNullOrEmpty(selectedIsoPath);
-            outputButton.Enabled = !busy && !String.IsNullOrEmpty(selectedIsoPath);
-            keepWorkspaceCheckBox.Enabled = !busy;
         }
 
         private bool IsBusy()
@@ -529,4 +453,3 @@ namespace TrystybellKoreanPatcher
         }
     }
 }
-

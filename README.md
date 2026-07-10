@@ -1,6 +1,6 @@
-# 트러스티 벨 한글 패치 (AI 번역)
+# 트러스티 벨 한글 패처
 
-Xbox 360 일본판 `트러스티 벨` ISO용 한글 패치 프로그램입니다.
+Xbox 360 일본판 `트러스티 벨` ISO에 현재 확정된 한글 패치를 적용하고 새 ISO로 재패킹하는 WinForms 프로그램입니다.
 
 ## 샘플
 
@@ -10,32 +10,35 @@ Xbox 360 일본판 `트러스티 벨` ISO용 한글 패치 프로그램입니다
 
 ![Sample 3](samples/sample3.jpg)
 
-## 현재 범위
+## 사용법
 
-- `ImasKoreanPatcher` 구조를 참고한 WinForms UI
-- ISO 드래그 앤 드롭 및 파일 선택
-- 출력 ISO 경로 선택
-- 향후 패치 흐름을 보여 주는 단계 목록
-- 순수 C# 패치 파이프라인 인터페이스와 자리표시자 단계
+1. 일본판 ISO를 창에 드래그하거나 클릭해서 선택합니다.
+2. `패치 시작`을 누릅니다.
+3. 완료된 ISO는 원본과 같은 폴더에 `<원본 파일명>_repacked.iso`로 저장됩니다.
 
-## 예정된 패치 단계
+출력 경로는 자동으로 결정됩니다. 같은 이름의 결과물이 이미 있으면 덮어쓸지 확인합니다. 임시 추출 폴더는 성공 시 자동 삭제하며, 실패 시 진단을 위해 보존합니다.
 
-1. ISO 검증
-2. 작업 폴더 준비
-3. XISO 추출
-4. `default.xex` 텍스트/델타 패치
-5. BMD/STBL 테이블 패치
-6. `.e` BTX fixed/reallocate 패치
-7. `p1.fnt` / `p1_g.fnt` 한글 폰트 패치
-8. NTEX/DDS 이미지 텍스트 패치
-9. ISO 재패킹
+## 적용 범위
+
+- XISO 추출 및 재패킹
+- 사용자가 `xextool.exe`를 제공한 경우 `default.xex` BTX 텍스트와 확정 메뉴 델타
+- 게임 내 대사·메뉴·설명 텍스트
+- 한글·ASCII·기호 글리프
+- 한글화된 UI 이미지
+
+## 실행 요구 사항
+
+- Windows
+- .NET Framework 4.0 이상
+
+실행 프로그램과 패치 엔진은 C#으로 구현되어 있습니다.
 
 ## 빌드
 
-Visual Studio 또는 MSBuild로 빌드합니다.
+Visual Studio 또는 .NET Framework MSBuild로 빌드합니다.
 
 ```powershell
-%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe TrystybellKoreanPatcher.sln /p:Configuration=Release
+& "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe" TrystybellKoreanPatcher.sln /p:Configuration=Release
 ```
 
 Build with GPT-5.5 · Translated with Gemma 4

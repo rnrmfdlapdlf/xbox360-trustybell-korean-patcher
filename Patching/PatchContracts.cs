@@ -8,13 +8,9 @@ namespace TrystybellKoreanPatcher.Patching
         ValidateInput = 0,
         PrepareWorkspace = 1,
         ExtractIso = 2,
-        PatchExecutableText = 3,
-        PatchBmdTables = 4,
-        PatchResourceText = 5,
-        PatchFonts = 6,
-        PatchImages = 7,
-        RepackIso = 8,
-        Complete = 9
+        ApplyKoreanPatch = 3,
+        RepackIso = 4,
+        Complete = 5
     }
 
     public enum PatchStageState
@@ -25,18 +21,16 @@ namespace TrystybellKoreanPatcher.Patching
         Blocked
     }
 
-    public enum PatchStepStatus
-    {
-        Complete,
-        PendingImplementation
-    }
-
     public sealed class PatchJobOptions
     {
         public string InputIsoPath { get; set; }
         public string OutputIsoPath { get; set; }
         public string WorkRoot { get; set; }
-        public bool KeepWorkspace { get; set; }
+        public string ExtractRoot { get; set; }
+        public string PatchBundleRoot { get; set; }
+        public string ExisoPath { get; set; }
+        public string XexToolPath { get; set; }
+        public int Workers { get; set; }
     }
 
     public sealed class PatchProgressInfo
@@ -57,51 +51,37 @@ namespace TrystybellKoreanPatcher.Patching
 
     public sealed class PatchStepResult
     {
-        private PatchStepResult(PatchStepStatus status, string message)
+        private PatchStepResult(string message)
         {
-            Status = status;
             Message = message;
         }
 
-        public PatchStepStatus Status { get; private set; }
         public string Message { get; private set; }
 
         public static PatchStepResult Complete(string message)
         {
-            return new PatchStepResult(PatchStepStatus.Complete, message);
-        }
-
-        public static PatchStepResult PendingImplementation(string message)
-        {
-            return new PatchStepResult(PatchStepStatus.PendingImplementation, message);
+            return new PatchStepResult(message);
         }
     }
 
     public sealed class PatchResult
     {
-        private PatchResult(bool completed, bool requiresImplementation, PatchStage lastStage, string outputIsoPath, string message)
+        private PatchResult(bool completed, PatchStage lastStage, string outputIsoPath, string message)
         {
             Completed = completed;
-            RequiresImplementation = requiresImplementation;
             LastStage = lastStage;
             OutputIsoPath = outputIsoPath;
             Message = message;
         }
 
         public bool Completed { get; private set; }
-        public bool RequiresImplementation { get; private set; }
         public PatchStage LastStage { get; private set; }
         public string OutputIsoPath { get; private set; }
         public string Message { get; private set; }
 
         public static PatchResult Complete(string outputIsoPath)
         {
-            return new PatchResult(true, false, PatchStage.Complete, outputIsoPath, "패치가 완료되었습니다.");
-        }
-
-        public static PatchResult Pending(PatchStage stage, string outputIsoPath, string message)
-        {
-            return new PatchResult(false, true, stage, outputIsoPath, message);
+            return new PatchResult(true, PatchStage.Complete, outputIsoPath, "패치가 완료되었습니다.");
         }
     }
 
@@ -160,11 +140,7 @@ namespace TrystybellKoreanPatcher.Patching
             PatchStage.ValidateInput,
             PatchStage.PrepareWorkspace,
             PatchStage.ExtractIso,
-            PatchStage.PatchExecutableText,
-            PatchStage.PatchBmdTables,
-            PatchStage.PatchResourceText,
-            PatchStage.PatchFonts,
-            PatchStage.PatchImages,
+            PatchStage.ApplyKoreanPatch,
             PatchStage.RepackIso
         };
 
@@ -185,16 +161,8 @@ namespace TrystybellKoreanPatcher.Patching
                     return "작업 폴더 준비";
                 case PatchStage.ExtractIso:
                     return "XISO 추출";
-                case PatchStage.PatchExecutableText:
-                    return "XEX 텍스트 패치";
-                case PatchStage.PatchBmdTables:
-                    return "BMD/STBL 패치";
-                case PatchStage.PatchResourceText:
-                    return ".e BTX 패치";
-                case PatchStage.PatchFonts:
-                    return "한글 폰트 패치";
-                case PatchStage.PatchImages:
-                    return "이미지 텍스트 패치";
+                case PatchStage.ApplyKoreanPatch:
+                    return "한글 패치 적용";
                 case PatchStage.RepackIso:
                     return "ISO 재패킹";
                 case PatchStage.Complete:
@@ -209,23 +177,15 @@ namespace TrystybellKoreanPatcher.Patching
             switch (stage)
             {
                 case PatchStage.ValidateInput:
-                    return 8;
+                    return 5;
                 case PatchStage.PrepareWorkspace:
-                    return 14;
+                    return 12;
                 case PatchStage.ExtractIso:
-                    return 24;
-                case PatchStage.PatchExecutableText:
-                    return 36;
-                case PatchStage.PatchBmdTables:
-                    return 48;
-                case PatchStage.PatchResourceText:
-                    return 62;
-                case PatchStage.PatchFonts:
-                    return 74;
-                case PatchStage.PatchImages:
-                    return 84;
+                    return 35;
+                case PatchStage.ApplyKoreanPatch:
+                    return 82;
                 case PatchStage.RepackIso:
-                    return 94;
+                    return 96;
                 case PatchStage.Complete:
                     return 100;
                 default:
@@ -242,7 +202,7 @@ namespace TrystybellKoreanPatcher.Patching
             }
 
             string name = Path.GetFileNameWithoutExtension(inputIsoPath);
-            return Path.Combine(directory, name + "_ko.iso");
+            return Path.Combine(directory, name + "_repacked.iso");
         }
 
         public static string BuildDefaultWorkRoot(string inputIsoPath)
@@ -258,4 +218,3 @@ namespace TrystybellKoreanPatcher.Patching
         }
     }
 }
-
