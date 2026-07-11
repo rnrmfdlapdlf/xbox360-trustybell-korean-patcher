@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace TrystybellKoreanPatcher.Patching
 {
@@ -76,7 +77,19 @@ namespace TrystybellKoreanPatcher.Patching
             PatchJobOptions options = context.Options;
             options.PatchBundleRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.Combine("Assets", "PatchBundle"));
             options.ExisoPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Path.Combine("Assets", Path.Combine("Tools", "exiso.exe")));
-            options.XexToolPath = PatchRuntime.FindUserXexTool();
+            if (String.IsNullOrWhiteSpace(options.XexToolPath))
+            {
+                options.XexToolPath = PatchRuntime.FindUserXexTool();
+            }
+            else
+            {
+                options.XexToolPath = Path.GetFullPath(options.XexToolPath);
+                if (!String.Equals(Path.GetFileName(options.XexToolPath), "xextool.exe", StringComparison.OrdinalIgnoreCase)
+                    || !PatchRuntime.IsSupportedXexTool(options.XexToolPath))
+                {
+                    options.XexToolPath = null;
+                }
+            }
 
             PatchRuntime.RequireFile(options.ExisoPath, "XISO 도구");
             PatchRuntime.RequirePatchBundle(options.PatchBundleRoot);
@@ -95,7 +108,10 @@ namespace TrystybellKoreanPatcher.Patching
                 File.Delete(options.OutputIsoPath);
             }
 
-            context.Report(Stage, PatchStageState.Complete, PatchStageCatalog.GetPercent(Stage), "작업 폴더 준비 완료");
+            string xexToolStatus = String.IsNullOrWhiteSpace(options.XexToolPath)
+                ? " (xextool.exe 없음: XEX 추가 번역 생략)"
+                : " (xextool.exe 확인: XEX 추가 번역 포함)";
+            context.Report(Stage, PatchStageState.Complete, PatchStageCatalog.GetPercent(Stage), "작업 폴더 준비 완료" + xexToolStatus);
             return PatchStepResult.Complete("작업 폴더 준비 완료");
         }
     }
@@ -159,7 +175,12 @@ namespace TrystybellKoreanPatcher.Patching
             PatchRuntime.ValidatePatchedGame(options.ExtractRoot);
             string xexStatus = applyResult.XexApplied
                 ? ", XEX 패치 포함"
-                : (applyResult.XexSkipped ? ", xextool.exe 미제공으로 XEX 패치 생략" : String.Empty);
+                : (applyResult.XexSkipped
+                    ? ", XEX 추가 번역 생략"
+                        + (String.IsNullOrWhiteSpace(applyResult.XexSkipReason)
+                            ? String.Empty
+                            : " (" + applyResult.XexSkipReason + ")")
+                    : String.Empty);
             context.Report(
                 Stage,
                 PatchStageState.Complete,
@@ -215,13 +236,35 @@ namespace TrystybellKoreanPatcher.Patching
 
     internal static class PatchRuntime
     {
+        private const string XexTool63Sha256 = "d93c1b814ad6ff124834f4235bf8aac9f09dba8d69c335ebecc8d6efe8d5a062";
+
+        public static bool IsSupportedXexTool(string path)
+        {
+            if (String.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                return false;
+            }
+
+            using (System.Security.Cryptography.SHA256 sha = System.Security.Cryptography.SHA256.Create())
+            using (FileStream stream = File.OpenRead(path))
+            {
+                byte[] hash = sha.ComputeHash(stream);
+                StringBuilder builder = new StringBuilder(hash.Length * 2);
+                foreach (byte value in hash)
+                {
+                    builder.Append(value.ToString("x2"));
+                }
+                return String.Equals(builder.ToString(), XexTool63Sha256, StringComparison.Ordinal);
+            }
+        }
+
         public static string FindUserXexTool()
         {
             string configured = Environment.GetEnvironmentVariable("TRUSTYBELL_XEXTOOL");
             if (!String.IsNullOrWhiteSpace(configured))
             {
                 string fullPath = Path.GetFullPath(configured);
-                if (File.Exists(fullPath))
+                if (IsSupportedXexTool(fullPath))
                 {
                     return fullPath;
                 }
@@ -235,7 +278,7 @@ namespace TrystybellKoreanPatcher.Patching
             };
             foreach (string candidate in candidates)
             {
-                if (File.Exists(candidate))
+                if (IsSupportedXexTool(candidate))
                 {
                     return candidate;
                 }

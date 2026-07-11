@@ -53,6 +53,28 @@ namespace TrystybellKoreanPatcher
             }
 
             if (args != null
+                && args.Length == 7
+                && String.Equals(args[0], "--replace-resource-patch", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    BinaryPatchBundle.Builder.ReplaceDecodedResource(
+                        args[1],
+                        args[2],
+                        args[3],
+                        args[4],
+                        args[5],
+                        args[6]);
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    WriteDiagnostic("replace_resource_patch", ex);
+                    return 5;
+                }
+            }
+
+            if (args != null
                 && args.Length == 4
                 && String.Equals(args[0], "--decode-resource", StringComparison.OrdinalIgnoreCase))
             {

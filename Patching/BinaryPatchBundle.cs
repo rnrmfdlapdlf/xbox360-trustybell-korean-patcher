@@ -21,6 +21,7 @@ namespace TrystybellKoreanPatcher.Patching
         public int ResourceFiles { get; set; }
         public bool XexApplied { get; set; }
         public bool XexSkipped { get; set; }
+        public string XexSkipReason { get; set; }
 
         public int TotalFiles
         {
@@ -104,8 +105,18 @@ namespace TrystybellKoreanPatcher.Patching
                 }
                 else
                 {
-                    ApplyXexEntry(gameRoot, bundleRoot, xexEntries[0], xexToolPath, workRoot);
-                    result.XexApplied = true;
+                    try
+                    {
+                        ApplyXexEntry(gameRoot, bundleRoot, xexEntries[0], xexToolPath, workRoot);
+                        result.XexApplied = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        // XEX translation is optional. Keep the original extracted XEX and
+                        // continue packaging the resource-only Korean patch.
+                        result.XexSkipped = true;
+                        result.XexSkipReason = ex.Message;
+                    }
                 }
             }
 
@@ -173,25 +184,34 @@ namespace TrystybellKoreanPatcher.Patching
                 File.Delete(convertedPath);
             }
 
-            ExternalToolRunner.Run(
-                xexToolPath,
-                "-e d -c u -o " + ExternalToolRunner.QuoteArgument(convertedPath) + " " + ExternalToolRunner.QuoteArgument(sourcePath),
-                Path.GetDirectoryName(xexToolPath),
-                "XEX 변환",
-                null);
-            PatchRuntime.RequireFile(convertedPath, "변환된 XEX");
-
-            byte[] source = File.ReadAllBytes(convertedPath);
-            int originalLength = (int)originalLength64;
-            if (source.Length < originalLength)
+            try
             {
-                byte[] padded = new byte[originalLength];
-                Buffer.BlockCopy(source, 0, padded, 0, source.Length);
-                source = padded;
+                ExternalToolRunner.Run(
+                    xexToolPath,
+                    "-e d -c u -o " + ExternalToolRunner.QuoteArgument(convertedPath) + " " + ExternalToolRunner.QuoteArgument(sourcePath),
+                    Path.GetDirectoryName(xexToolPath),
+                    "XEX 변환",
+                    null);
+                PatchRuntime.RequireFile(convertedPath, "변환된 XEX");
+
+                byte[] source = File.ReadAllBytes(convertedPath);
+                int originalLength = (int)originalLength64;
+                if (source.Length < originalLength)
+                {
+                    byte[] padded = new byte[originalLength];
+                    Buffer.BlockCopy(source, 0, padded, 0, source.Length);
+                    source = padded;
+                }
+                string patchPath = Path.Combine(bundleRoot, entry.PatchFile.Replace('/', Path.DirectorySeparatorChar));
+                WriteAtomically(sourcePath, BinaryDelta.Apply(source, patchPath));
             }
-            string patchPath = Path.Combine(bundleRoot, entry.PatchFile.Replace('/', Path.DirectorySeparatorChar));
-            WriteAtomically(sourcePath, BinaryDelta.Apply(source, patchPath));
-            File.Delete(convertedPath);
+            finally
+            {
+                if (File.Exists(convertedPath))
+                {
+                    File.Delete(convertedPath);
+                }
+            }
         }
 
         private static void WriteAtomically(string targetPath, byte[] target)
@@ -307,6 +327,129 @@ namespace TrystybellKoreanPatcher.Patching
 
         internal static class Builder
         {
+            public static int ReplaceDecodedResource(
+                string existingBundleRoot,
+                string originalIndexRoot,
+                string originalResourceRoot,
+                string relativePath,
+                string targetDecodedPath,
+                string outputBundleRoot)
+            {
+                existingBundleRoot = Path.GetFullPath(existingBundleRoot);
+                originalIndexRoot = Path.GetFullPath(originalIndexRoot);
+                originalResourceRoot = Path.GetFullPath(originalResourceRoot);
+                targetDecodedPath = Path.GetFullPath(targetDecodedPath);
+                outputBundleRoot = Path.GetFullPath(outputBundleRoot);
+                if (Directory.Exists(outputBundleRoot) || File.Exists(outputBundleRoot))
+                {
+                    throw new IOException("패치 번들 출력 경로가 이미 존재합니다: " + outputBundleRoot);
+                }
+
+                List<PatchBundleEntry> manifest = LoadManifest(existingBundleRoot);
+                List<PatchBundleEntry> indexEntries = manifest
+                    .Where(item => String.Equals(item.Mode, IndexMode, StringComparison.Ordinal))
+                    .ToList();
+                if (indexEntries.Count != 1)
+                {
+                    throw new InvalidDataException("기존 패치 번들의 index.vmtoc 항목이 올바르지 않습니다.");
+                }
+
+                Dictionary<string, VmtocEntry> originalEntries = TrustyBellResourceDecoder.ReadVmtoc(originalIndexRoot);
+                VmtocEntry resourceEntry;
+                string normalizedPath = relativePath.Replace('\\', '/');
+                if (!originalEntries.TryGetValue(normalizedPath, out resourceEntry))
+                {
+                    throw new KeyNotFoundException("원본 index.vmtoc에 없는 리소스입니다: " + relativePath);
+                }
+
+                string originalResourcePath = ToGamePath(originalResourceRoot, resourceEntry.Name);
+                byte[] sourceDecoded = TrustyBellResourceDecoder.DecodePayload(
+                    File.ReadAllBytes(originalResourcePath),
+                    resourceEntry.DecodedSize,
+                    resourceEntry.Flags);
+                byte[] targetDecoded = File.ReadAllBytes(targetDecodedPath);
+
+                string resourceIdentifier = ComputeIdentifier(normalizedPath);
+                List<PatchBundleEntry> replacedEntries = manifest
+                    .Where(
+                        item => String.Equals(item.Mode, DecodedMode, StringComparison.Ordinal)
+                            && String.Equals(item.Identifier, resourceIdentifier, StringComparison.Ordinal))
+                    .ToList();
+                manifest.RemoveAll(item => replacedEntries.Contains(item));
+
+                CopyDirectory(existingBundleRoot, outputBundleRoot);
+                foreach (PatchBundleEntry replaced in replacedEntries)
+                {
+                    string obsoletePath = Path.Combine(
+                        outputBundleRoot,
+                        replaced.PatchFile.Replace('/', Path.DirectorySeparatorChar));
+                    if (File.Exists(obsoletePath))
+                    {
+                        File.Delete(obsoletePath);
+                    }
+                }
+
+                string resourcePatchFile = "patches/resource_" + resourceIdentifier.Substring(0, 12) + ".tbp.gz";
+                string resourcePatchPath = Path.Combine(
+                    outputBundleRoot,
+                    resourcePatchFile.Replace('/', Path.DirectorySeparatorChar));
+                if (File.Exists(resourcePatchPath))
+                {
+                    File.Delete(resourcePatchPath);
+                }
+                BinaryDelta.Build(sourceDecoded, targetDecoded, resourcePatchPath);
+                if (!BinaryDelta.Apply(sourceDecoded, resourcePatchPath).SequenceEqual(targetDecoded))
+                {
+                    throw new InvalidDataException("생성된 리소스 델타 자체 검증에 실패했습니다.");
+                }
+
+                PatchBundleEntry replacement = new PatchBundleEntry();
+                replacement.Mode = DecodedMode;
+                replacement.Identifier = resourceIdentifier;
+                replacement.PatchFile = resourcePatchFile;
+                int insertAt = manifest.FindIndex(
+                    item => !String.Equals(item.Mode, DecodedMode, StringComparison.Ordinal));
+                if (insertAt < 0)
+                {
+                    manifest.Add(replacement);
+                }
+                else
+                {
+                    manifest.Insert(insertAt, replacement);
+                }
+
+                byte[] sourceIndex = File.ReadAllBytes(Path.Combine(originalIndexRoot, IndexPath));
+                PatchBundleEntry indexEntry = indexEntries[0];
+                string existingIndexPatch = Path.Combine(
+                    existingBundleRoot,
+                    indexEntry.PatchFile.Replace('/', Path.DirectorySeparatorChar));
+                byte[] targetIndex = BinaryDelta.Apply(sourceIndex, existingIndexPatch);
+                int entryOffset = checked(resourceEntry.Index * 0x30);
+                WriteInt32BigEndian(targetIndex, entryOffset + 0x20, targetDecoded.Length);
+                targetIndex[entryOffset + 0x24] = 0;
+
+                string outputIndexPatch = Path.Combine(
+                    outputBundleRoot,
+                    indexEntry.PatchFile.Replace('/', Path.DirectorySeparatorChar));
+                File.Delete(outputIndexPatch);
+                BinaryDelta.Build(sourceIndex, targetIndex, outputIndexPatch);
+                if (!BinaryDelta.Apply(sourceIndex, outputIndexPatch).SequenceEqual(targetIndex))
+                {
+                    throw new InvalidDataException("생성된 index.vmtoc 델타 자체 검증에 실패했습니다.");
+                }
+
+                List<string> lines = new List<string>();
+                lines.Add(ManifestHeader);
+                lines.AddRange(
+                    manifest.Select(
+                        item => item.Mode + "\t" + item.Identifier + "\t" + item.PatchFile.Replace('\\', '/')));
+                File.WriteAllLines(
+                    Path.Combine(outputBundleRoot, ManifestName),
+                    lines.ToArray(),
+                    new UTF8Encoding(false));
+                return manifest.Count;
+            }
+
             public static int Build(
                 string sourceRoot,
                 string patchedRoot,
@@ -364,6 +507,31 @@ namespace TrystybellKoreanPatcher.Patching
                         entry => entry.Mode + "\t" + entry.Identifier + "\t" + entry.PatchFile.Replace('\\', '/')));
                 File.WriteAllLines(Path.Combine(outputRoot, ManifestName), lines.ToArray(), new UTF8Encoding(false));
                 return manifest.Count;
+            }
+
+            private static void CopyDirectory(string sourceRoot, string targetRoot)
+            {
+                Directory.CreateDirectory(targetRoot);
+                foreach (string directory in Directory.GetDirectories(sourceRoot, "*", SearchOption.AllDirectories))
+                {
+                    string relative = directory.Substring(sourceRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                    Directory.CreateDirectory(Path.Combine(targetRoot, relative));
+                }
+                foreach (string file in Directory.GetFiles(sourceRoot, "*", SearchOption.AllDirectories))
+                {
+                    string relative = file.Substring(sourceRoot.Length).TrimStart(Path.DirectorySeparatorChar);
+                    string target = Path.Combine(targetRoot, relative);
+                    Directory.CreateDirectory(Path.GetDirectoryName(target));
+                    File.Copy(file, target, false);
+                }
+            }
+
+            private static void WriteInt32BigEndian(byte[] data, int offset, int value)
+            {
+                data[offset] = (byte)((value >> 24) & 0xFF);
+                data[offset + 1] = (byte)((value >> 16) & 0xFF);
+                data[offset + 2] = (byte)((value >> 8) & 0xFF);
+                data[offset + 3] = (byte)(value & 0xFF);
             }
 
             private static void AddRawPatch(

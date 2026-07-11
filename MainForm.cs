@@ -13,12 +13,16 @@ namespace TrystybellKoreanPatcher
         private readonly Dictionary<PatchStage, Label> stageStatusLabels;
 
         private Panel dropPanel;
-        private Label dropHintLabel;
+        private Label isoStatusLabel;
+        private Label xexToolStatusLabel;
+        private Label extraTranslationLabel;
+        private ToolTip filePathToolTip;
         private Button patchButton;
         private ProgressBar progressBar;
         private TextBox logTextBox;
 
         private string selectedIsoPath;
+        private string selectedXexToolPath;
         private BackgroundWorker patchWorker;
 
         public MainForm()
@@ -34,6 +38,8 @@ namespace TrystybellKoreanPatcher
             AllowDrop = true;
 
             BuildLayout();
+            selectedXexToolPath = PatchRuntime.FindUserXexTool();
+            UpdateFileStatuses();
             ResetStageStatuses();
 
             DragEnter += OnDragEnter;
@@ -105,42 +111,54 @@ namespace TrystybellKoreanPatcher
             inner.Padding = new Padding(22);
             inner.BackColor = Color.White;
             inner.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            inner.RowStyles.Add(new RowStyle(SizeType.Absolute, 104F));
+            inner.RowStyles.Add(new RowStyle(SizeType.Absolute, 250F));
             inner.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             panel.Controls.Add(inner);
 
             TableLayoutPanel center = new TableLayoutPanel();
             center.ColumnCount = 1;
-            center.RowCount = 2;
+            center.RowCount = 4;
             center.Dock = DockStyle.Fill;
             center.BackColor = Color.White;
-            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 64F));
-            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 76F));
+            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            center.RowStyles.Add(new RowStyle(SizeType.Absolute, 70F));
             inner.Controls.Add(center, 0, 1);
 
             Label titleLabel = new Label();
             titleLabel.Dock = DockStyle.Fill;
-            titleLabel.TextAlign = ContentAlignment.MiddleCenter;
-            titleLabel.Font = new Font(Font.FontFamily, 13F, FontStyle.Bold, GraphicsUnit.Point);
+            titleLabel.TextAlign = ContentAlignment.MiddleLeft;
+            titleLabel.Font = new Font(Font.FontFamily, 11F, FontStyle.Bold, GraphicsUnit.Point);
             titleLabel.ForeColor = Color.FromArgb(34, 42, 54);
             titleLabel.UseMnemonic = false;
-            titleLabel.Text = "일본판 Trusty Bell ISO를\r\n여기에 드래그 & 드롭";
+            titleLabel.Text = "ISO 및 관련 파일을 여기에 드래그 & 드롭\r\n또는 클릭해서 파일 선택";
             center.Controls.Add(titleLabel, 0, 0);
 
-            dropHintLabel = new Label();
-            dropHintLabel.Dock = DockStyle.Fill;
-            dropHintLabel.TextAlign = ContentAlignment.TopCenter;
-            dropHintLabel.AutoEllipsis = true;
-            dropHintLabel.UseMnemonic = false;
-            dropHintLabel.ForeColor = Color.FromArgb(92, 101, 116);
-            dropHintLabel.Text = "클릭해서 ISO 파일 선택";
-            center.Controls.Add(dropHintLabel, 0, 1);
+            isoStatusLabel = BuildFileStatusLabel();
+            center.Controls.Add(isoStatusLabel, 0, 1);
+
+            xexToolStatusLabel = BuildFileStatusLabel();
+            center.Controls.Add(xexToolStatusLabel, 0, 2);
+
+            extraTranslationLabel = new Label();
+            extraTranslationLabel.Dock = DockStyle.Fill;
+            extraTranslationLabel.Margin = new Padding(0, 8, 0, 0);
+            extraTranslationLabel.Padding = new Padding(10, 5, 10, 5);
+            extraTranslationLabel.TextAlign = ContentAlignment.MiddleLeft;
+            extraTranslationLabel.BorderStyle = BorderStyle.FixedSingle;
+            extraTranslationLabel.UseMnemonic = false;
+            center.Controls.Add(extraTranslationLabel, 0, 3);
+
+            filePathToolTip = new ToolTip();
 
             panel.Click += OnDropPanelClick;
             inner.Click += OnDropPanelClick;
             center.Click += OnDropPanelClick;
             titleLabel.Click += OnDropPanelClick;
-            dropHintLabel.Click += OnDropPanelClick;
+            isoStatusLabel.Click += OnDropPanelClick;
+            xexToolStatusLabel.Click += OnDropPanelClick;
+            extraTranslationLabel.Click += OnDropPanelClick;
             panel.DragEnter += OnDragEnter;
             panel.DragDrop += OnDragDrop;
             inner.DragEnter += OnDragEnter;
@@ -149,6 +167,17 @@ namespace TrystybellKoreanPatcher
             center.DragDrop += OnDragDrop;
 
             return panel;
+        }
+
+        private static Label BuildFileStatusLabel()
+        {
+            Label label = new Label();
+            label.Dock = DockStyle.Fill;
+            label.TextAlign = ContentAlignment.MiddleLeft;
+            label.AutoEllipsis = true;
+            label.UseMnemonic = false;
+            label.Padding = new Padding(0, 2, 0, 2);
+            return label;
         }
 
         private Panel BuildStagePanel()
@@ -236,48 +265,106 @@ namespace TrystybellKoreanPatcher
 
             using (OpenFileDialog dialog = new OpenFileDialog())
             {
-                dialog.Title = "원본 ISO 파일 선택";
-                dialog.Filter = "ISO files (*.iso)|*.iso|All files (*.*)|*.*";
-                dialog.Multiselect = false;
+                dialog.Title = "원본 ISO 및 xextool.exe 선택";
+                dialog.Filter = "지원 파일 (*.iso;*.exe)|*.iso;*.exe|ISO 파일 (*.iso)|*.iso|xextool.exe (*.exe)|*.exe|모든 파일 (*.*)|*.*";
+                dialog.Multiselect = true;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    SelectIso(dialog.FileName);
+                    SelectFiles(dialog.FileNames);
                 }
             }
         }
 
         private void OnDragEnter(object sender, DragEventArgs e)
         {
-            string path = TryGetDroppedIso(e);
-            e.Effect = path == null ? DragDropEffects.None : DragDropEffects.Copy;
+            string[] paths = TryGetDroppedFiles(e);
+            e.Effect = HasSupportedFile(paths) ? DragDropEffects.Copy : DragDropEffects.None;
         }
 
         private void OnDragDrop(object sender, DragEventArgs e)
         {
-            string path = TryGetDroppedIso(e);
-            if (path == null)
+            string[] paths = TryGetDroppedFiles(e);
+            if (!HasSupportedFile(paths))
             {
-                AppendLog("선택한 파일은 ISO가 아닙니다.");
+                AppendLog("원본 ISO 또는 xextool.exe 파일을 선택해 주세요.");
                 return;
             }
 
-            SelectIso(path);
+            SelectFiles(paths);
         }
 
-        private void SelectIso(string path)
+        private void SelectFiles(string[] paths)
         {
-            if (!IsIsoPath(path))
+            bool changed = false;
+            foreach (string path in paths)
             {
-                AppendLog("ISO 파일만 선택할 수 있습니다.");
-                return;
+                if (IsIsoPath(path))
+                {
+                    selectedIsoPath = Path.GetFullPath(path);
+                    AppendLog("ISO 선택됨: " + selectedIsoPath);
+                    changed = true;
+                }
+                else if (IsXexToolPath(path))
+                {
+                    selectedXexToolPath = Path.GetFullPath(path);
+                    AppendLog(PatchRuntime.IsSupportedXexTool(selectedXexToolPath)
+                        ? "xextool.exe 6.3 선택됨: XEX 추가 번역이 활성화됩니다."
+                        : "지원하지 않는 xextool.exe입니다. 6.3 버전을 사용해 주세요. XEX 추가 번역은 생략됩니다.");
+                    changed = true;
+                }
+                else
+                {
+                    AppendLog("지원하지 않는 파일입니다: " + Path.GetFileName(path));
+                }
             }
 
-            selectedIsoPath = Path.GetFullPath(path);
-            patchButton.Enabled = true;
-            progressBar.Value = 0;
-            ResetStageStatuses();
-            dropHintLabel.Text = Path.GetFileName(path);
-            logTextBox.Text = "ISO 선택됨: " + selectedIsoPath;
+            if (changed)
+            {
+                patchButton.Enabled = !String.IsNullOrEmpty(selectedIsoPath);
+                progressBar.Value = 0;
+                ResetStageStatuses();
+                UpdateFileStatuses();
+            }
+        }
+
+        private void UpdateFileStatuses()
+        {
+            bool isoReady = !String.IsNullOrWhiteSpace(selectedIsoPath) && File.Exists(selectedIsoPath);
+            if (isoReady)
+            {
+                isoStatusLabel.Text = "✅ (필수) 트러스티벨 일본어판 원본 ISO\r\n    준비됨: " + Path.GetFileName(selectedIsoPath);
+                isoStatusLabel.ForeColor = Color.FromArgb(28, 132, 86);
+                filePathToolTip.SetToolTip(isoStatusLabel, selectedIsoPath);
+            }
+            else
+            {
+                isoStatusLabel.Text = "❌ (필수) 트러스티벨 일본어판 원본 ISO\r\n    준비되지 않음";
+                isoStatusLabel.ForeColor = Color.FromArgb(190, 60, 52);
+                filePathToolTip.SetToolTip(isoStatusLabel, String.Empty);
+            }
+
+            bool xexToolExists = !String.IsNullOrWhiteSpace(selectedXexToolPath) && File.Exists(selectedXexToolPath);
+            bool xexToolReady = xexToolExists && PatchRuntime.IsSupportedXexTool(selectedXexToolPath);
+            if (xexToolReady)
+            {
+                xexToolStatusLabel.Text = "✅ (옵션) xextool.exe 6.3\r\n    준비됨: " + Path.GetFileName(selectedXexToolPath);
+                xexToolStatusLabel.ForeColor = Color.FromArgb(28, 132, 86);
+                extraTranslationLabel.Text = "추가 번역 활성화\r\nXEX 영역의 번역도 함께 적용됩니다.";
+                extraTranslationLabel.BackColor = Color.FromArgb(232, 247, 239);
+                extraTranslationLabel.ForeColor = Color.FromArgb(24, 111, 72);
+                filePathToolTip.SetToolTip(xexToolStatusLabel, selectedXexToolPath);
+            }
+            else
+            {
+                xexToolStatusLabel.Text = xexToolExists
+                    ? "⚠ (옵션) xextool.exe 6.3\r\n    지원하지 않는 버전 — XEX 번역 생략"
+                    : "➖ (옵션) xextool.exe 6.3\r\n    없음 — 기본 번역만 적용";
+                xexToolStatusLabel.ForeColor = Color.FromArgb(172, 105, 22);
+                extraTranslationLabel.Text = "추가 번역 옵션\r\nxextool.exe 6.3이 있으면 XEX 영역의 추가 번역을 적용합니다.";
+                extraTranslationLabel.BackColor = Color.FromArgb(255, 247, 226);
+                extraTranslationLabel.ForeColor = Color.FromArgb(142, 86, 18);
+                filePathToolTip.SetToolTip(xexToolStatusLabel, String.Empty);
+            }
         }
 
         private void OnPatchButtonClick(object sender, EventArgs e)
@@ -311,6 +398,7 @@ namespace TrystybellKoreanPatcher
 
             PatchJobOptions options = new PatchJobOptions();
             options.InputIsoPath = selectedIsoPath;
+            options.XexToolPath = selectedXexToolPath;
 
             patchWorker = new BackgroundWorker();
             patchWorker.WorkerReportsProgress = true;
@@ -428,21 +516,28 @@ namespace TrystybellKoreanPatcher
             logTextBox.ScrollToCaret();
         }
 
-        private static string TryGetDroppedIso(DragEventArgs e)
+        private static string[] TryGetDroppedFiles(DragEventArgs e)
         {
             if (!e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                return null;
+                return new string[0];
             }
 
             string[] files = e.Data.GetData(DataFormats.FileDrop) as string[];
-            if (files == null || files.Length != 1)
+            return files ?? new string[0];
+        }
+
+        private static bool HasSupportedFile(string[] paths)
+        {
+            foreach (string path in paths)
             {
-                return null;
+                if (IsIsoPath(path) || IsXexToolPath(path))
+                {
+                    return true;
+                }
             }
 
-            string path = files[0];
-            return IsIsoPath(path) ? path : null;
+            return false;
         }
 
         private static bool IsIsoPath(string path)
@@ -450,6 +545,13 @@ namespace TrystybellKoreanPatcher
             return !String.IsNullOrEmpty(path)
                 && File.Exists(path)
                 && String.Equals(Path.GetExtension(path), ".iso", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsXexToolPath(string path)
+        {
+            return !String.IsNullOrEmpty(path)
+                && File.Exists(path)
+                && String.Equals(Path.GetFileName(path), "xextool.exe", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

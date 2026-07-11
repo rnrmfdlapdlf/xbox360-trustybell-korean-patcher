@@ -54,7 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="README.md">
+    <None Include="README.md" />
+    <None Include="LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -66,15 +67,15 @@
     <Content Include="Assets\PatchBundle\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="samples\sample1.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="samples\sample2.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="samples\sample3.jpg">
+    <Content Include="docs\THIRD_PARTY_NOTICES.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <Target Name="CleanReleaseOutputBeforeBuild"
+          BeforeTargets="PrepareForBuild"
+          Condition="'$(Configuration)' == 'Release'">
+    <Delete Files="$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.exe;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.exe.config;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.pdb;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.xml;$(MSBuildProjectDirectory)\bin\Release\LICENSE" />
+    <RemoveDir Directories="$(MSBuildProjectDirectory)\bin\Release\Assets;$(MSBuildProjectDirectory)\bin\Release\docs;$(MSBuildProjectDirectory)\bin\Release\samples" />
+  </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

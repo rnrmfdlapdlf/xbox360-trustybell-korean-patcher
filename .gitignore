@@ -1,6 +1,7 @@
 bin/
 obj/
 Assets/
+scripts/
 .vs/
 *.user
 *.suo
