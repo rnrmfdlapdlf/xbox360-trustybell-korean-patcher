@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrystybellKoreanPatcher", "TrystybellKoreanPatcher.csproj", "{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrustyBellKoreanPatcher", "TrustyBellKoreanPatcher.csproj", "{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,4 +17,3 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
-

@@ -8,8 +8,8 @@
     <ProjectGuid>{22BD1D5B-CE9B-43D0-9F84-AC01BA83B22B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TrystybellKoreanPatcher</RootNamespace>
-    <AssemblyName>TrystybellKoreanPatcher</AssemblyName>
+    <RootNamespace>TrustyBellKoreanPatcher</RootNamespace>
+    <AssemblyName>TrustyBellKoreanPatcher</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
     <FileAlignment>512</FileAlignment>
@@ -74,7 +74,7 @@
   <Target Name="CleanReleaseOutputBeforeBuild"
           BeforeTargets="PrepareForBuild"
           Condition="'$(Configuration)' == 'Release'">
-    <Delete Files="$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.exe;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.exe.config;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.pdb;$(MSBuildProjectDirectory)\bin\Release\TrystybellKoreanPatcher.xml;$(MSBuildProjectDirectory)\bin\Release\LICENSE" />
+    <Delete Files="$(MSBuildProjectDirectory)\bin\Release\TrustyBellKoreanPatcher.exe;$(MSBuildProjectDirectory)\bin\Release\TrustyBellKoreanPatcher.exe.config;$(MSBuildProjectDirectory)\bin\Release\TrustyBellKoreanPatcher.pdb;$(MSBuildProjectDirectory)\bin\Release\TrustyBellKoreanPatcher.xml;$(MSBuildProjectDirectory)\bin\Release\LICENSE" />
     <RemoveDir Directories="$(MSBuildProjectDirectory)\bin\Release\Assets;$(MSBuildProjectDirectory)\bin\Release\docs;$(MSBuildProjectDirectory)\bin\Release\samples" />
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

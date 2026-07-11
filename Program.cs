@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Windows.Forms;
-using TrystybellKoreanPatcher.Patching;
+using TrustyBellKoreanPatcher.Patching;
 
-namespace TrystybellKoreanPatcher
+namespace TrustyBellKoreanPatcher
 {
     internal static class Program
     {
@@ -120,7 +120,7 @@ namespace TrystybellKoreanPatcher
         {
             try
             {
-                string path = Path.Combine(Path.GetTempPath(), "TrystybellKoreanPatcher_" + command + "_error.txt");
+                string path = Path.Combine(Path.GetTempPath(), "TrustyBellKoreanPatcher_" + command + "_error.txt");
                 File.WriteAllText(path, exception.ToString());
             }
             catch

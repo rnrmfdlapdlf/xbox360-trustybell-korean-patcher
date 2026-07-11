@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace TrystybellKoreanPatcher.Patching
+namespace TrustyBellKoreanPatcher.Patching
 {
     internal static class ExternalToolRunner
     {

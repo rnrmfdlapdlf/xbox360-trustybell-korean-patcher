@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace TrystybellKoreanPatcher.Patching
+namespace TrustyBellKoreanPatcher.Patching
 {
     public enum PatchStage
     {

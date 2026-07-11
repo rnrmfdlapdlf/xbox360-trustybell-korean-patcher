@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace TrystybellKoreanPatcher.Patching
+namespace TrustyBellKoreanPatcher.Patching
 {
     public sealed class ValidateInputStep : ITrustyBellPatchStep
     {

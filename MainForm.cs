@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using TrystybellKoreanPatcher.Patching;
+using TrustyBellKoreanPatcher.Patching;
 
-namespace TrystybellKoreanPatcher
+namespace TrustyBellKoreanPatcher
 {
     public sealed class MainForm : Form
     {

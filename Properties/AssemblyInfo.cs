@@ -1,11 +1,11 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("TrystybellKoreanPatcher")]
+[assembly: AssemblyTitle("TrustyBellKoreanPatcher")]
 [assembly: AssemblyDescription("Korean patcher for Trusty Bell Xbox 360 ISO")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TrystybellKoreanPatcher")]
+[assembly: AssemblyProduct("TrustyBellKoreanPatcher")]
 [assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

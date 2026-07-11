@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TrystybellKoreanPatcher.Patching
+namespace TrustyBellKoreanPatcher.Patching
 {
     public sealed class TrustyBellPatchPipeline
     {
